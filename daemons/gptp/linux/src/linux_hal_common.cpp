@@ -307,7 +307,7 @@ bool LinuxNetworkInterface::getLinkSpeed( int sd, uint32_t *speed )
 {
 	struct ifreq ifr;
 	struct ethtool_cmd edata;
-
+#if 0
 	ifr.ifr_ifindex = ifindex;
 	if( ioctl( sd, SIOCGIFNAME, &ifr ) == -1 )
 	{
@@ -346,6 +346,9 @@ bool LinuxNetworkInterface::getLinkSpeed( int sd, uint32_t *speed )
 		*speed = LINKSPEED_10G;
 		break;
 	}
+#endif
+	*speed = LINKSPEED_100MB;
+
 	GPTP_LOG_STATUS( "Link Speed: %d kb/sec", *speed );
 
 	return true;
@@ -775,6 +778,11 @@ bool LinuxLock::initialize( OSLockType type ) {
 }
 
 LinuxLock::~LinuxLock() {
+    if (_private)
+    {
+        delete _private;  
+    }
+    
 	int lock_c = pthread_mutex_lock(&_private->mutex);
 	if(lock_c == 0) {
 		pthread_mutex_destroy( &_private->mutex );

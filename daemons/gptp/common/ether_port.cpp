@@ -986,6 +986,11 @@ void EtherPort::timestamper_init()
 {
 	if (_hw_timestamper != nullptr)
 	{
+		GPTP_LOG_INFO("hardware timestamper is not supported,using software timestamping.\n");
+        
+		fUseHardwareTimestamp = false;
+#if 0
+    
 #ifdef APTP		
 		bool ok = _hw_timestamper->HWTimestamper_init(net_label, net_iface, this);
 #else
@@ -997,6 +1002,7 @@ void EtherPort::timestamper_init()
 			 "falling back to software timestamping");
 			fUseHardwareTimestamp = false;
 		}
+#endif        
 	}
 }
 

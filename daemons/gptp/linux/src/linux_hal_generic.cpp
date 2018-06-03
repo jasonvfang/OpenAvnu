@@ -358,6 +358,7 @@ LinuxTimestamperGeneric::LinuxTimestamperGeneric() :
 	igb_private = NULL;
 #endif
 	sd = -1;
+    phc_fd = -1;
 }
 
 bool LinuxTimestamperGeneric::Adjust(const timeval& tm)
@@ -591,9 +592,11 @@ int LinuxTimestamperGeneric::HWTimestamper_txtimestamp
 
 bool LinuxTimestamperGeneric::post_init( int ifindex, int sd, TicketingLock *lock ) {
 	int timestamp_flags = 0;
-	struct ifreq device;
+    struct ifreq device;
+#ifdef PTP_HW_CROSSTSTAMP
 	struct hwtstamp_config hwconfig;
-	int err;
+#endif    
+	int err = -1;
 
 	this->sd = sd;
 	this->net_lock = lock;
@@ -606,17 +609,23 @@ bool LinuxTimestamperGeneric::post_init( int ifindex, int sd, TicketingLock *loc
 		GPTP_LOG_ERROR("Failed to get interface name: %s", strerror(errno));
 		return false;
 	}
-
+    
+#ifdef PTP_HW_CROSSTSTAMP
 	device.ifr_data = (char *) &hwconfig;
 	memset( &hwconfig, 0, sizeof( hwconfig ));
 	hwconfig.rx_filter = HWTSTAMP_FILTER_PTP_V2_EVENT;
 	hwconfig.tx_type = HWTSTAMP_TX_ON;
 	err = ioctl( sd, SIOCSHWTSTAMP, &device );
+#endif
+
 	if (-1 == err) 
 	{
+#ifdef PTP_HW_CROSSTSTAMP	
 		GPTP_LOG_ERROR("Failed to configure hardware timestamping: %s",
 		 strerror(errno));
-		GPTP_LOG_ERROR("Attempting to configure software timestamping");
+#endif
+		GPTP_LOG_INFO("configure software timestamping");
+
 		timestamp_flags |= SOF_TIMESTAMPING_RX_SOFTWARE;
 		timestamp_flags |= SOF_TIMESTAMPING_TX_SOFTWARE;
 
@@ -684,6 +693,9 @@ bool LinuxTimestamperGeneric::HWTimestamper_gettime
 ( Timestamp *system_time, Timestamp *device_time, uint32_t *local_clock,
   uint32_t *nominal_clock_rate ) const
 {
+    return false;//not support hw timestamp
+#if 0
+
 	if( phc_fd == -1 )
 		return false;
 
@@ -732,4 +744,5 @@ bool LinuxTimestamperGeneric::HWTimestamper_gettime
 	}
 
 	return true;
+#endif
 }

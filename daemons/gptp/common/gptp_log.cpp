@@ -58,14 +58,15 @@ void gptplogUnregister(void)
 
 void gptpLog(GPTP_LOG_LEVEL level, const char *tag, const char *path, int line, const char *fmt, ...)
 {
-	char msg[1024];
+	char msg[1024] = {0};
 
 	std::lock_guard<std::mutex> guard(gLogKeeper);
 	
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(msg, fmt, args);
-
+	vsnprintf(msg, sizeof(msg) - 1, fmt, args);
+	va_end(args);
+	
 #ifndef GENIVI_DLT
 	std::chrono::system_clock::time_point cNow = std::chrono::system_clock::now();
 	time_t tNow = std::chrono::system_clock::to_time_t(cNow);

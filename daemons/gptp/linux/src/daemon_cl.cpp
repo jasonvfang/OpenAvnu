@@ -37,6 +37,7 @@
 #include "avbts_oslock.hpp"
 #include "avbts_persist.hpp"
 #include "gptp_cfg.hpp"
+#include <sys/prctl.h>
 
 #ifdef ARCH_INTELCE
 #include "linux_hal_intelce.hpp"
@@ -159,6 +160,17 @@ class AKeeper
 		{
 			delete ifname;
 			delete pPort;
+            
+            #if 0 //mem free in class IEEE1588Clock
+            if(pClock->fup_info) {
+                delete pClock->fup_info;
+            }
+            
+            if(pClock->fup_status) {
+                delete pClock->fup_status;
+            }
+            #endif
+            
 			delete pClock;
 			delete ipc;
 			delete thread_factory;
@@ -200,6 +212,11 @@ int main(int argc, char **argv)
 	memset(config_file_path, 0, 512);
 
 	GPTPPersist *pGPTPPersist = nullptr;
+
+    //set parent signal, if parent dies, we have to exit also.
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+    prctl(PR_SET_PDEATHSIG,SIGHUP);
+    prctl(PR_SET_PDEATHSIG,SIGKILL);
 
 	// Block SIGUSR1
 	{

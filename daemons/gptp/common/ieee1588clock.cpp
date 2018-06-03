@@ -534,5 +534,12 @@ bool IEEE1588Clock::isBetterThan(PTPMessageAnnounce * msg)
 
 IEEE1588Clock::~IEEE1588Clock(void)
 {
-	// Do nothing
+    if(fup_info) {
+        delete fup_info;
+    }
+    
+    if(fup_status) {
+        delete fup_status;
+    }
 }
+
