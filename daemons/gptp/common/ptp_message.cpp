@@ -1294,8 +1294,13 @@ void PTPMessageSync::processMessage(EtherPort *port)
 		std::lock_guard<std::mutex> lockSync(*(port->GetLastSyncMutex()));
       GPTP_LOG_DEBUG("------------- PTPMessageSync::processMessage   after sync LOCK");
 		PTPMessageSync *sync = port->getLastSync(false);
+        
+        if (sync != NULL)
+		{
+		    delete sync;
+        }
+        
 		port->setLastSync(NULL, false);
-		delete sync;
 
 		GPTP_LOG_VERBOSE("PTPMessageSync::processMessage  before setLastSync");
 		port->setLastSync(this, false);
@@ -1948,6 +1953,7 @@ void PTPMessageDelayReq::processMessage(EtherPort * port)
 	if (*(port->getPortIdentity()) == *getPortIdentity())
 	{
 		// Ignore messages from self
+		_gc = true;
 		return;
 	}
 
@@ -1976,6 +1982,8 @@ void PTPMessageDelayReq::processMessage(EtherPort * port)
 		port->putTxLock();
 
 	}
+
+    _gc = true;
 }
 
 bool PTPMessageDelayReq::sendPort(EtherPort * port,
@@ -2925,6 +2933,8 @@ void PTPMessageSignalling::processMessage( EtherPort *port )
 	GPTP_LOG_STATUS("Signalling Link Delay Interval: %d", tlv.getLinkDelayInterval());
 	GPTP_LOG_STATUS("Signalling Sync Interval: %d", tlv.getTimeSyncInterval());
 	GPTP_LOG_STATUS("Signalling Announce Interval: %d", tlv.getAnnounceInterval());
+
+    _gc = true;
 
 #ifndef APTP
 	long long unsigned int waitTime;

@@ -345,13 +345,11 @@ net_result EtherPort::maybeProcessMessage(bool checkEventMessage)
 	if (net_succeed == rrecv)
 	{
 		GPTP_LOG_VERBOSE("Processing network buffer");
-		msg = buildPTPMessage(reinterpret_cast<char*>(buf),
-		 kBufSize, &remote, this, ingressTime);
+		msg = buildPTPMessage(reinterpret_cast<char*>(buf), kBufSize, &remote, this, ingressTime);
 		if (msg != NULL)
 		{
 			GPTP_LOG_VERBOSE("Processing message");
-			GPTP_LOG_VERBOSE("EtherPort::maybeProcessMessage   clockId:%s",
-			 port_identity->getClockIdentity().getIdentityString().c_str());
+			GPTP_LOG_VERBOSE("EtherPort::maybeProcessMessage   clockId:%s", port_identity->getClockIdentity().getIdentityString().c_str());
 			msg->processMessage(this);
 			if (msg->garbage())
 			{
