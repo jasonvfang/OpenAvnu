@@ -1615,12 +1615,14 @@ void PTPMessageFollowUp::processMessage(EtherPort *port)
 	if (port->getPortState() == PTP_DISABLED ) {
 		GPTP_LOG_VERBOSE("Followup   Received Follow Up but state is PTP_DISABLED");
 		// Do nothing Sync messages should be ignored when in this state
+		_gc = true;
 		return;
 	}
 	if (port->getPortState() == PTP_FAULTY) {
 		GPTP_LOG_VERBOSE("Followup   Received Follow Up but state is PTP_FAULTY");
 		// According to spec recovery is implementation specific
 		port->recoverPort();
+        _gc = true;
 		return;
 	}
 
@@ -1639,6 +1641,7 @@ void PTPMessageFollowUp::processMessage(EtherPort *port)
       	PTPMessageSync *sync = port->getLastSync(false);
 		if (sync == nullptr) {
 			GPTP_LOG_ERROR("Received Follow Up but there is no sync message");
+            _gc = true;
 			return;
 		}
 
@@ -1676,6 +1679,7 @@ void PTPMessageFollowUp::processMessage(EtherPort *port)
 
 
 	MaybePerformCalculations(port, ok);
+    _gc = true;
 
 	return;
 
@@ -2112,12 +2116,14 @@ void PTPMessageDelayResp::processMessage(EtherPort * port)
 	{
 		// Ignore messages from self
 		GPTP_LOG_VERBOSE("Ignoring Delay Response message from self.");
+        _gc = true;
 		return;
 	}
 
 	GPTP_LOG_DEBUG("*** Delay Response processMessage  delayMech:%d",port->getDelayMechanism());
 
 	MaybePerformCalculations(port);
+    _gc = true;
 }
 
 bool PTPMessageDelayResp::sendPort(EtherPort * port,
