@@ -104,7 +104,21 @@ EtherPort::~EtherPort()
 	delete pdelay_rx_lock;
 	delete port_tx_lock;
 	delete pDelayIntervalTimerLock;
+
+	if(last_pdelay_req)
+        delete last_pdelay_req;
+
+	if(last_pdelay_resp_fwup)
+        delete last_pdelay_resp_fwup;
+
+	if(qualified_announce)
+        delete qualified_announce;
+    
+	if(last_sync)
+        delete last_sync;
+    
 }
+
 
 EtherPort::EtherPort( PortInit_t *portInit ) :
 	CommonPort( portInit )
