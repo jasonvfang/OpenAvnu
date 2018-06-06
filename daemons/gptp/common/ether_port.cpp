@@ -425,7 +425,18 @@ net_result EtherPort::port_send(uint16_t etherType, uint8_t * buf, int size,
 		}
 		else
 		{
-			mapSocketAddr(destIdentity, &dest);	
+#ifdef USING_SHARD_PTR_MAP
+			mapSocketAddr(destIdentity, &dest);
+#else
+            PortIdentity tmpIdentity;
+            tmpIdentity.setClockIdentity(destIdentity->getClockIdentity());
+            
+            uint16_t tmpPort;
+            destIdentity->getPortNumber(&tmpPort);
+            tmpIdentity.setPortNumber(&tmpPort);
+            
+            mapSocketAddr_by_obj(tmpIdentity, &dest);
+#endif
 		}
 		
 		dest.Port(port);
@@ -982,6 +993,9 @@ void EtherPort::becomeSlave( bool restart_syntonization ) {
 	getClock()->updateFUPInfo();
 }
 
+
+#ifdef USING_SHARD_PTR_MAP
+
 void EtherPort::mapSocketAddr
 (std::shared_ptr<PortIdentity>  destIdentity, LinkLayerAddress * remote)
 {
@@ -992,7 +1006,42 @@ void EtherPort::addSockAddrMap
 (std::shared_ptr<PortIdentity>  destIdentity, LinkLayerAddress * remote)
 {
 	identity_map[destIdentity] = *remote;
+
+    //identity_map.insert(std::map<std::shared_ptr<PortIdentity>, LinkLayerAddress>::value_type(destIdentity, *remote));
+    {
+        uint16_t debugPort;
+        destIdentity->getPortNumber(&debugPort);
+        
+        //printf("[%s-%d], identityString=[%s], port=[%u]\n", __func__, __LINE__, destIdentity->getClockIdentity().getIdentityString().c_str(), debugPort);
+
+
+        printf("[%s-%d], identity_map.size[%d]\n", __func__, __LINE__,identity_map.size());
+
+        std::map<std::shared_ptr<PortIdentity>, LinkLayerAddress>::iterator iter;  
+        for(iter = identity_map.begin(); iter != identity_map.end(); iter++)  
+        {
+            iter->first->getPortNumber(&debugPort);
+            printf("[%s-%d], identityString=[%s], port=[%u]\n", __func__, __LINE__, iter->first->getClockIdentity().getIdentityString().c_str(), debugPort);
+        }
+    }
 }
+#else
+
+void EtherPort::mapSocketAddr_by_obj
+(PortIdentity &destIdentity, LinkLayerAddress * remote)
+{
+	*remote = identity_map[destIdentity];
+}
+
+
+void EtherPort::addSockAddrMap_by_obj
+(PortIdentity &destIdentity, LinkLayerAddress *remote)
+{
+	identity_map[destIdentity] = *remote;
+    GPTP_LOG_VERBOSE("[%s-%d], identity_map.size[%d]\n", __func__, __LINE__,identity_map.size());
+}
+#endif
+
 
 void EtherPort::timestamper_init()
 {

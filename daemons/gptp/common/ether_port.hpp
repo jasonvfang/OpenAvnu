@@ -70,8 +70,11 @@
  * @brief Provides a map for the identityMap member of EtherPort
  * class
  */
+ #ifdef USING_SHARD_PTR_MAP
 typedef std::map < std::shared_ptr<PortIdentity>, LinkLayerAddress > IdentityMap_t;
-
+#else
+typedef std::map < PortIdentity, LinkLayerAddress > IdentityMap_t;
+#endif
 
 /**
  * @brief Ethernet specific port functions
@@ -128,8 +131,11 @@ class EtherPort : public CommonPort
 
 	PTPMessageAnnounce *qualified_announce;
 
+#ifdef USING_SHARD_PTR_MAP
 	IdentityMap_t identity_map;
-
+#else
+    IdentityMap_t identity_map;
+#endif
 	PTPMessageSync *last_sync;
 
 	OSCondition *port_ready_condition;
@@ -673,6 +679,7 @@ protected:
 		return ++duplicate_resp_counter == DUPLICATE_RESP_THRESH;
 	}
 
+#ifdef USING_SHARD_PTR_MAP
 	/**
 	 * @brief  Maps socket addr to the remote link layer address
 	 * @param  destIdentity [in] PortIdentity remote
@@ -690,6 +697,13 @@ protected:
 	 */
 	void addSockAddrMap
 	(std::shared_ptr<PortIdentity> destIdentity, LinkLayerAddress * remote);
+#else
+    void addSockAddrMap_by_obj
+    (PortIdentity &destIdentity, LinkLayerAddress *remote);
+
+    void mapSocketAddr_by_obj
+    (PortIdentity &destIdentity, LinkLayerAddress * remote);
+#endif
 
 	/**
 	 * @brief  Gets link up count

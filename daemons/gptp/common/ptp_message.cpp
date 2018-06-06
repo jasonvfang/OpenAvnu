@@ -439,6 +439,15 @@ PTPMessageCommon *buildPTPMessage
 		(uint8_t *)(buf + PTP_COMMON_HDR_SOURCE_CLOCK_ID(PTP_COMMON_HDR_OFFSET)),
 		(uint16_t *)(buf + PTP_COMMON_HDR_SOURCE_PORT_ID(PTP_COMMON_HDR_OFFSET)));
 
+#ifndef USING_SHARD_PTR_MAP
+    PortIdentity tmpIdentity;
+    tmpIdentity.setClockIdentity(sourcePortIdentity->getClockIdentity());
+    
+    uint16_t tmpPort;
+    sourcePortIdentity->getPortNumber(&tmpPort);
+    tmpIdentity.setPortNumber(&tmpPort);
+#endif
+
 	memcpy
 		(&(sequenceId),
 		 buf + PTP_COMMON_HDR_SEQUENCE_ID(PTP_COMMON_HDR_OFFSET),
@@ -959,7 +968,11 @@ PTPMessageCommon *buildPTPMessage
 	GPTP_LOG_VERBOSE("clock id (raw):%s", sourcePortIdentity ? sourcePortIdentity->getClockIdentity().getIdentityString().c_str() : "EMPTY sourcePortIdentity");
 	msg->logCommonHeader();
 
+#ifdef USING_SHARD_PTR_MAP
 	port->addSockAddrMap(msg->sourcePortIdentity, remote);
+#else
+	port->addSockAddrMap_by_obj(tmpIdentity, remote);
+#endif
 
 	uint16_t debugPort;
 	msg->sourcePortIdentity->getPortNumber(&debugPort);
